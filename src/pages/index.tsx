@@ -2,13 +2,12 @@ import React from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout/Layout'
 import styled from 'styled-components'
+import Router from 'next/router'
 import Button from '../components/ui-kits/Button/Button'
-import withApollo from '../utils/withApollo'
-import { useQuery } from '@apollo/react-hooks'
-import { GET_PRODUCTS } from '../graphql/product/product.query'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { Card } from '../components/ui-kits/Card'
+import { baseUrl } from '../common/constants'
 
 export const HomeContainer = styled.div``
 
@@ -19,22 +18,28 @@ export const StyledHomeBody = styled.div`
   grid-template-columns: repeat(auto-fill, 220px);
   grid-gap: 10px;
 `
+interface IProduct {
+  id: number
+  image: string
+  name: string
+}
 
-function Home() {
-  const { loading, error, data } = useQuery(GET_PRODUCTS, {
-    variables: {
-      input: {
-        page: 1,
-        keyword: 'Samsung',
-      },
-    },
-  })
-  if (error) return <h1>Error</h1>
-  if (loading) return <h1>Loading...</h1>
+interface IHomeProps {
+  data: [IProduct]
+}
 
-  const products = data?.getAllProduct?.data
+const Home: React.FC<IHomeProps> = (props) => {
+  const products = props.data
   if (!products || !products.length) {
     return <p>Not found</p>
+  }
+
+  const onViewProduct = (product: IProduct): void => {
+    Router.push(`/product/${product.id}`)
+  }
+
+  const onAddToCart = (id: number): void => {
+    console.log(id)
   }
 
   return (
@@ -46,18 +51,18 @@ function Home() {
       <Header />
       <Layout>
         <StyledHomeBody>
-          {products.map((data) => (
+          {products.map((product) => (
             <Card
-              key={data.id}
-              imageURL={data.image}
+              key={product.id}
+              imageURL={product.image}
               buttonGroups={
                 <>
-                  <Button>View</Button>
-                  <Button>Add to Cart</Button>
+                  <Button onClick={() => onViewProduct(product)}>View</Button>
+                  <Button onClick={() => onAddToCart(product.id)}>Add to Cart</Button>
                 </>
               }
             >
-              {data.name}
+              {product.name}
             </Card>
           ))}
         </StyledHomeBody>
@@ -67,4 +72,15 @@ function Home() {
   )
 }
 
-export default withApollo({ ssr: true })(Home)
+export async function getStaticProps() {
+  const res = await fetch(`${baseUrl}/product/`)
+  const productList = await res.json()
+
+  return {
+    props: {
+      data: productList.data,
+    },
+  }
+}
+
+export default Home

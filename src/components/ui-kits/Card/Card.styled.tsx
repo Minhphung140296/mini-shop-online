@@ -11,11 +11,11 @@ export const StyledCard = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
   padding: 10px;
-  grid-gap: 10px;
+  grid-gap: 10px; 
 `
 
 export const StyledCardImage = styled.img`
-  max-width: 100px;
+  max-width: 100%;
   justify-self: center;
 `
 
